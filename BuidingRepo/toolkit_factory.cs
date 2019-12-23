@@ -145,6 +145,13 @@ namespace BuildingRepo
                 c.Curve = curve;
             });
         }
+        public static IfcArbitraryClosedProfileDef MakeArbitraryProfile(IfcStore m, List<IfcCartesianPoint> profilePointSet)
+        {
+            return m.Instances.New<IfcArbitraryClosedProfileDef>(prof =>
+            {
+                prof.OuterCurve = MakePolyLine(m, profilePointSet);
+            });
+        }
 
         public static IfcCenterLineProfileDef MakeCenterLineProfile(IfcStore m, IfcCartesianPoint start, IfcCartesianPoint end,
                         double thickness)
@@ -184,6 +191,16 @@ namespace BuildingRepo
         public static double GetLength(IfcCartesianPoint p1, IfcCartesianPoint p2)
         {
             return Math.Sqrt((p1.X - p2.X) * (p1.X - p2.X) + (p1.Y - p2.Y) * (p1.Y - p2.Y) + (p1.Z - p2.Z) * (p1.Z - p2.Z));
+        }
+
+        public static IfcRectangleProfileDef MakeRecProf(IfcStore m,double x,double y)
+        {
+            return m.Instances.New<IfcRectangleProfileDef>(prof =>
+            {
+                prof.XDim = x;
+                prof.YDim = y;
+                prof.ProfileType = IfcProfileTypeEnum.AREA;
+            });
         }
 
     }

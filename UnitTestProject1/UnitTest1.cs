@@ -19,21 +19,23 @@ namespace UnitTestProject1
         {
             using (var plateconst = new Building_factory())
             {
-                plateconst.PlateBuild();
+                plateconst.SlabBuild();
             }
         }
         [TestMethod]
         public void TestMethod2()
         {
-            using (var beamconst = new Building_factory())
+            using (var buildingconst = new Building_factory())
             {
                 var spacing = new List<List<double>>() { new List<double>() { 8000, 8000 }, new List<double>() { 8000, 8000 } };//柱距8m
                 var span = new List<List<double>>() { new List<double>() { 7200, 7200 }, new List<double>() { 7200, 7200 } };
                 var Layer_height = new List<double>() { 3000, 4000 };
-                beamconst.GeneratePlacementMap(spacing, span, Layer_height);
-                beamconst.BeamBuild();
-                beamconst.ColumnBuild();
-                beamconst.PlateBuild();
+                buildingconst.GeneratePlacementMap(spacing, span, Layer_height);
+                buildingconst.Build();
+
+                //buildingconst.BeamBuild();
+                //buildingconst.ColumnBuild();
+                //buildingconst.SlabBuild();
             }
         }
 

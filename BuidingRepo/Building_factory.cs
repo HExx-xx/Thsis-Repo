@@ -45,7 +45,7 @@ namespace BuildingRepo
                 ApplicationVersion = "1.0",
                 EditorsFamilyName = "HE",
                 EditorsGivenName = "Shixin",
-                EditorsOrganisationName = "TJU"
+                EditorsOrganisationName = "HUST"
             };
             //create model by using method in IfcStore class,using memory mode,and IFC4x1 format
             var model = IfcStore.Create(credentials, XbimSchemaVersion.Ifc4x1, XbimStoreType.InMemoryModel);
@@ -140,152 +140,109 @@ namespace BuildingRepo
         }
 
 
-        //plate code
+        //building code
         #region
-        public void PlateBuild() 
+        public void Build()
         {
-            //写创建过程
+            InitWCS();
             var site = toolkit_factory.CreateSite(_model, "Structure Site");
-
-
-            #region
-            var Plate = new List<IfcPlate>();
-            double thickness;
-            (double,double,double) p1=()
-            #endregion
-
-
-
-
-            double thickness = 200;
-            #region
-            #region
-            var Plate = new List<IfcPlate>();
-            int count = _placementMap.Count;
-            double z = _placementMap[0].height;
-            for (int i = 0; i < count; i++)
-            {
-                double y = 0;
-                for (int j = 0; j < count; j++)
-                {
-                    double x = 0;
-                    (double, double, double) startPoint = (x, y, z);
-                    (double, double, double) endPoint = (x, y + _placementMap[i].span[j], z);
-                    for (int k = 0; k < count; k++)
-                    {
-
-                        (double, double, double, double, double, double) plateProfile = (x, y, z, x + _placementMap[i].spacing[k], y, z);
-                        Plate.Add(CreatePlate(startPoint, endPoint, plateProfile, thickness));
-                        x += _placementMap[i].spacing[k];
-                    }
-                    y += _placementMap[i].span[j];
-                }
-                if (i + 1 < count)
-                    z += _placementMap[i + 1].height;
-            }
-            for (int i = 0; i < Plate.Count; i++)
-            {
-                toolkit_factory.AddPrductIntoSpatial(_model, site, Plate[i], "Add plate to site");
-            }
-            #endregion
-
-            #endregion
-
-
-
-
-            //test1
-            //(double, double, double) profile_p1 = (0, 0, 3000);
-            //(double, double, double) profile_p2 = (0, 7200, 3000);
-            //(double, double, double, double, double, double) plate_profile = (0,0, 3000,  8000,0, 3000);
-            //var plate1 = CreatePlate(profile_p1, profile_p2, plate_profile, thickness);
-            //toolkit_factory.AddPrductIntoSpatial(_model, site, plate1, "Add plate to siteata");
-
-            //plate_profile = (8000, 0, 3000, 16000, 0, 3000);
-            //var plate3 = CreatePlate(profile_p1, profile_p2, plate_profile, thickness);
-            //toolkit_factory.AddPrductIntoSpatial(_model, site, plate3, "Add plate to siteata");
-
-
-
-
-            //(double, double, double) profile_p3 = (0, 7200, 3000);
-            //(double, double, double) profile_p4= (0, 14400, 3000);
-            //(double, double, double, double, double, double) plate_profile1 = (0, 0, 0, 8000, 0, 0);
-            //var plate2 = CreatePlate(profile_p3, profile_p4, plate_profile1, thickness);
-            //toolkit_factory.AddPrductIntoSpatial(_model, site, plate2, "Add plate to siteata");
-
-            ////failure test
-            //plate_profile1 = (0, 7200,0, 8000, 7200, 0);
-            //var plate5 = CreatePlate(profile_p3, profile_p4, plate_profile1, thickness);
-            //toolkit_factory.AddPrductIntoSpatial(_model, site, plate5, "Add plate to siteata");
-
-            //plate_profile1 = (8000, 0, 3000, 16000, 0, 3000);
-            //var plate4 = CreatePlate(profile_p3, profile_p4, plate_profile1, thickness);
-            //toolkit_factory.AddPrductIntoSpatial(_model, site, plate4, "Add plate to siteata");
-
-            //end test
-
-
-
-
+            var Columns = BeamBuild();
+            var Beams = ColumnBuild();
+            var Slabs = SlabBuild();
+            foreach (var column in Columns)
+                toolkit_factory.AddPrductIntoSpatial(_model, site, column, "Add plate to site");
+            foreach (var beam in Beams)
+                toolkit_factory.AddPrductIntoSpatial(_model, site, beam, "Add plate to site");
+            foreach (var slab in Slabs)
+                toolkit_factory.AddPrductIntoSpatial(_model, site, slab, "Add plate to site");
 
             _model.SaveAs(_outputPath, StorageType.Ifc);
         }
+        #endregion
+
+        //slab code
+        #region
+        public List<IfcSlab> SlabBuild() 
+        {
+            //写创建过程
+            var Slab = new List<IfcSlab>();
+            double thickness = 200;
+            List<(double, double, double)> Points = new List<(double, double, double)>();
+
+            double z = 0;
+            for (int k = 0; k<_placementMap.Count;k++)
+            {
+                z += _placementMap[k].height;
+                double y = 0;
+                for (int j = 0; j<_placementMap[k].span.Count;j++)
+                {
+                    double x = 0;
+                    double b = _placementMap[k].span[j];
+                    for(int i = 0; i<_placementMap[k].spacing.Count;i++)
+                    {
+                        double a = _placementMap[k].spacing[i];
+                        var tmp = new List<(double, double, double)> { (x, y, z), (x + a, y, z), (x + a, y + b, z), (x, y + b, z), (x, y, z) };
+                        Points.AddRange(tmp);
+                        Slab.Add(CreateSlab(Points, thickness));
+                        Points.Clear();
+                        x += _placementMap[k].spacing[i];
+                    }
+                    y += _placementMap[k].span[j];
+                }
+            }
+            return Slab;
+        }
 
         //绿色的板
-        private IfcPlate CreatePlate((double x, double y, double z)startPoint, (double x, double y, double z) endPoint,
-            (double x1, double y1, double z1, double x2, double y2, double z2) LineProfile,double thickness)
+        private IfcSlab CreateSlab(List<(double x,double y,double z)> Points, double thickness)
         {
-            using (var txn = this._model.BeginTransaction("CreatePlate"))
+            using (var txn = this._model.BeginTransaction("CreateSlab"))
             {
-                var plate = this._model.Instances.New<IfcPlate>();
-                plate.Name = "testPlate";
-                plate.ObjectType = "Single_Plate";
+                var slab = this._model.Instances.New<IfcSlab>();
+                slab.Name = "testPlate";
+                slab.ObjectType = "Single_Plate";
 
-                var point1 = toolkit_factory.MakeCartesianPoint(_model, startPoint.x, startPoint.y, startPoint.z);
-                var point2 = toolkit_factory.MakeCartesianPoint(_model, endPoint.x, endPoint.y, endPoint.z);
+                var PointSet = new List<IfcCartesianPoint>();
+                foreach (var point in Points)
+                {
+                    PointSet.Add(toolkit_factory.MakeCartesianPoint(_model, point.x, point.y, point.z));
+                }
+                var profile = toolkit_factory.MakeArbitraryProfile(_model, PointSet);
+                
 
-                var profile_point1 = toolkit_factory.MakeCartesianPoint(_model, LineProfile.x1, LineProfile.y1, LineProfile.z1);
-                var profile_point2 = toolkit_factory.MakeCartesianPoint(_model, LineProfile.x2, LineProfile.y2, LineProfile.z2);
-                var profile = toolkit_factory.MakeCenterLineProfile(_model, profile_point1, profile_point2, thickness);
-        
                 var solid = this._model.Instances.New<IfcExtrudedAreaSolid>(); //extruded area solid:拉伸区域实体。
                                                                 //有四个重要参数：SweptArea、ExtrudedDirection、Position、Depth
                 solid.SweptArea = profile;
                 solid.ExtrudedDirection = toolkit_factory.MakeDirection(_model, 0,0,1);   //拉伸方向为z轴
-                var solid_direction=toolkit_factory.MakeDirection(_model, point1, point2);
-                solid.Position = toolkit_factory.MakeLocalAxisPlacement(_model, point1, solid_direction);
-                solid.Depth = toolkit_factory.GetLength(point1, point2);
+                //var solid_direction=toolkit_factory.MakeDirection(_model, point1, point2);
+                //solid.Position = toolkit_factory.MakeLocalAxisPlacement(_model, point1, solid_direction);
+
+                solid.Depth = thickness;
+                solid.ExtrudedDirection = toolkit_factory.MakeDirection(_model, 0, 0, 1);
 
                 toolkit_factory.SetSurfaceColor(_model, solid, 124.0 / 255.0, 200.0 / 255.0, 49.0 / 255.0, 0.15);
                 var shape = toolkit_factory.MakeShapeRepresentation(_model, 3, "Body", "AdvancedSweptSolid", solid);
 
-                plate.Representation = this._model.Instances.New<IfcProductDefinitionShape>(pd => pd.Representations.Add(shape));
-                plate.PredefinedType = IfcPlateTypeEnum.USERDEFINED;
+                slab.Representation = this._model.Instances.New<IfcProductDefinitionShape>(pd => pd.Representations.Add(shape));
+                slab.PredefinedType = IfcSlabTypeEnum.USERDEFINED;
 
                 txn.Commit();
-                return plate;
+                return slab;
             }
         }
-
-
         #endregion
 
 
 
         //beam code
         #region
-        public void BeamBuild()
+        public List<IfcBeam> BeamBuild()
         {
-            var site = toolkit_factory.CreateSite(_model, "Structure Site");
-
-            //300*600的梁
-            //建立梁所需参数：形心点、拉伸方向上的一点、梁截面参数（梁宽w，梁高h)
+            var Beam = new List<IfcBeam>();
             double width = 300;
             double height = 600;
 
-            //建主梁
-            var Mainbeam = new List<IfcBeam>();
+            //建主梁            
             int count = _placementMap.Count;
             double z = _placementMap[0].height;
             for (int k = 0; k < count; k++)
@@ -299,7 +256,7 @@ namespace BuildingRepo
                         (double, double, double) shape_heart = (x, y, z);
                         (double, double, double) extruded_point = (x + _placementMap[k].spacing[i], y, z);
 
-                        Mainbeam.Add(CreateBeam(shape_heart, extruded_point, width, height));
+                        Beam.Add(CreateBeam(shape_heart, extruded_point, width, height));
                         x += _placementMap[k].spacing[i];
                     }
                     if (j != count)
@@ -308,13 +265,8 @@ namespace BuildingRepo
                 if (k + 1 < count)
                     z += _placementMap[k + 1].height;
             }
-            for (int i = 0; i < Mainbeam.Count; i++)
-            {
-                toolkit_factory.AddPrductIntoSpatial(_model, site, Mainbeam[i], "Add plate to site");
-            }
 
             //次梁
-            var Secbeam = new List<IfcBeam>();
             z = _placementMap[0].height;
             for (int k = 0; k < count; k++)
             {
@@ -326,7 +278,7 @@ namespace BuildingRepo
                     {
                         (double, double, double) shape_heart = (x, y, z);
                         (double, double, double) extruded_point = (x, y + _placementMap[k].span[i], z);
-                        Secbeam.Add(CreateSecBeam(shape_heart, extruded_point, width, height));
+                        Beam.Add(CreateSecBeam(shape_heart, extruded_point, width, height));
                         y += _placementMap[k].span[i];
                     }
                     if (j != count)
@@ -335,13 +287,9 @@ namespace BuildingRepo
                 if (k + 1 < count)
                     z += _placementMap[k + 1].height;
             }
-            for (int i = 0; i < Secbeam.Count; i++)
-            {
-                toolkit_factory.AddPrductIntoSpatial(_model, site, Secbeam[i], "Add plate to site");
-            }
-
-            _model.SaveAs(_outputPath, StorageType.Ifc);
+            return Beam;
         }
+
 
         //咖啡色主梁
         private IfcBeam CreateBeam((double x, double y, double z) shape_heart, (double x, double y, double z) extruded_point,double width, double height)
@@ -456,13 +404,11 @@ namespace BuildingRepo
 
         //column code
         #region
-        public void ColumnBuild()
+        public List<IfcColumn> ColumnBuild()
         {
-            var site = toolkit_factory.CreateSite(_model, "Structrue Site");
+            var Column = new List<IfcColumn>();
             (double, double, double, double, double, double) column_profile = (-200, 0, 0, 200, 0, 0);
-            var Ccolumn = new List<IfcColumn>();
-            int count = _placementMap.Count;
-             
+            int count = _placementMap.Count;             
             double z = 0;
             for (int k = 0; k<count;k++)
             {
@@ -473,8 +419,8 @@ namespace BuildingRepo
                     for (int i = 0; i <= count; i++)
                     {
                         (double, double, double) startPoint = (x, y, z);
-                        (double, double, double) endPoint = (x, y, z + _placementMap[k].height);                      
-                        Ccolumn.Add(CreateColumn(startPoint, endPoint, column_profile));
+                        (double, double, double) endPoint = (x, y, z + _placementMap[k].height);
+                        Column.Add(CreateColumn(startPoint, endPoint, column_profile));
                         if (i != count)
                             x += _placementMap[k].spacing[i];
                     }
@@ -483,16 +429,16 @@ namespace BuildingRepo
                 }
                 z +=_placementMap[k].height;
             }
-
-            for(int i =0;i<Ccolumn.Count;i++)
-            {
-                toolkit_factory.AddPrductIntoSpatial(_model, site, Ccolumn[i], "Add column to site");
-            }
-
-            _model.SaveAs(_outputPath, StorageType.Ifc);
+            return Column;
 
         }
 
+        private IfcColumn CreateColumn((double x, double y, double z) startPoint,double height,
+            (double x1, double y1, double z1, double x2, double y2, double z2) LineProfile)
+        {
+            var endpoint = (startPoint.x, startPoint.y, startPoint.z + height);
+            return CreateColumn(startPoint, endpoint, LineProfile);
+        }
 
     
         private IfcColumn CreateColumn((double x, double y, double z) startPoint, (double x, double y, double z) endPoint,
