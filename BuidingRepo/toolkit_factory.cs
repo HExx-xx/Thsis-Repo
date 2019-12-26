@@ -100,8 +100,10 @@ namespace BuildingRepo
             }
         }
 
+        //颜色设置
         public static void SetSurfaceColor(IfcStore m, IfcGeometricRepresentationItem geoitem, 
                                             double red, double green, double blue, double transparency = 0)
+
         {
             var styleditem = m.Instances.New<IfcStyledItem>(si =>
             {
@@ -137,14 +139,42 @@ namespace BuildingRepo
             });
         }
 
-        public static IfcCenterLineProfileDef MakeCenterLineProfile(IfcStore m, IfcBoundedCurve curve, double thickness)
+
+
+
+        //建立IfcGridAxis轴线1
+        public static IfcGridAxis MakeGridAxis(IfcStore m,string axisLable,IfcPolyline l)
         {
-            return m.Instances.New<IfcCenterLineProfileDef>(c =>
+            return m.Instances.New<IfcGridAxis>(axis =>
             {
-                c.Thickness = thickness;
-                c.Curve = curve;
+                axis.AxisTag = axisLable;
+                axis.AxisCurve = l;
+                axis.SameSense = true;
             });
         }
+
+        //建立IfcGridAxis轴线2
+        public static IfcGridAxis MakeGridAxis(IfcStore m, string axisLable, IfcCartesianPoint p1, IfcCartesianPoint p2)
+        {
+            var line = MakePolyLine(m, p1, p2);
+            return MakeGridAxis(m, axisLable,line);
+        }
+
+
+
+        //profile 1 ——RectangleProfileDef
+        public static IfcRectangleProfileDef MakeRectangleProf(IfcStore m, double x, double y)
+        {
+            return m.Instances.New<IfcRectangleProfileDef>(prof =>
+            {
+                prof.XDim = x;
+                prof.YDim = y;
+                prof.ProfileType = IfcProfileTypeEnum.AREA;
+            });
+        }
+
+
+        //profile 2 ——ArbitraryClosedProfileDef
         public static IfcArbitraryClosedProfileDef MakeArbitraryProfile(IfcStore m, List<IfcCartesianPoint> profilePointSet)
         {
             return m.Instances.New<IfcArbitraryClosedProfileDef>(prof =>
@@ -153,6 +183,17 @@ namespace BuildingRepo
             });
         }
 
+        //profile 3.1 ——CenterLineProfileDef
+        public static IfcCenterLineProfileDef MakeCenterLineProfile(IfcStore m, IfcBoundedCurve curve, double thickness)
+        {
+            return m.Instances.New<IfcCenterLineProfileDef>(c =>
+            {
+                c.Thickness = thickness;
+                c.Curve = curve;
+            });
+        }
+
+        //profile 3.2 ——CenterLineProfileDef
         public static IfcCenterLineProfileDef MakeCenterLineProfile(IfcStore m, IfcCartesianPoint start, IfcCartesianPoint end,
                         double thickness)
         {
@@ -160,11 +201,15 @@ namespace BuildingRepo
             return MakeCenterLineProfile(m, line, thickness);
         }
 
+
+
+        //折线1
         public static IfcPolyline MakePolyLine(IfcStore m, IfcCartesianPoint start, IfcCartesianPoint end)
         {
             return MakePolyLine(m, new List<IfcCartesianPoint>() { start, end });
         }
 
+        //折线2
         public static IfcPolyline MakePolyLine(IfcStore m, List<IfcCartesianPoint> points)
         {
             return m.Instances.New<IfcPolyline>(pl =>
@@ -193,15 +238,7 @@ namespace BuildingRepo
             return Math.Sqrt((p1.X - p2.X) * (p1.X - p2.X) + (p1.Y - p2.Y) * (p1.Y - p2.Y) + (p1.Z - p2.Z) * (p1.Z - p2.Z));
         }
 
-        public static IfcRectangleProfileDef MakeRecProf(IfcStore m,double x,double y)
-        {
-            return m.Instances.New<IfcRectangleProfileDef>(prof =>
-            {
-                prof.XDim = x;
-                prof.YDim = y;
-                prof.ProfileType = IfcProfileTypeEnum.AREA;
-            });
-        }
+
 
     }
 }

@@ -49,7 +49,7 @@ namespace UnitTestProject1
                 var Layer_height = new List<double>() { 3000, 4000 };
 
                 columnconst.GeneratePlacementMap(Column_spacing, Column_span, Layer_height);
-                columnconst.ColumnBuild();
+                columnconst.BuildAxis();
 
             }
         }

@@ -125,8 +125,6 @@ namespace BuildingRepo
         //_placementMap 用于记录轴网的间距、跨度以及层高
         private Dictionary<int, (List<double> spacing, List<double> span, double height)> _placementMap = new Dictionary<int, (List<double> spacing, List<double> span, double height)>();
 
-
-
         //GeneratePlacementMap函数：将TEST中输入的轴网层高等信息解析到类Building的成员_placementMap中保存。
         public void GeneratePlacementMap(List<List<double>> Column_spacing, List<List<double>> Column_span, List<double> height)
         {
@@ -149,16 +147,88 @@ namespace BuildingRepo
             var Columns = BeamBuild();
             var Beams = ColumnBuild();
             var Slabs = SlabBuild();
+            var Axis = BuildAxis();
             foreach (var column in Columns)
-                toolkit_factory.AddPrductIntoSpatial(_model, site, column, "Add plate to site");
+                toolkit_factory.AddPrductIntoSpatial(_model, site, column, "Add column to site");
             foreach (var beam in Beams)
-                toolkit_factory.AddPrductIntoSpatial(_model, site, beam, "Add plate to site");
+                toolkit_factory.AddPrductIntoSpatial(_model, site, beam, "Add beam to site");
             foreach (var slab in Slabs)
-                toolkit_factory.AddPrductIntoSpatial(_model, site, slab, "Add plate to site");
-
+                toolkit_factory.AddPrductIntoSpatial(_model, site, slab, "Add slab to site");
+            toolkit_factory.AddPrductIntoSpatial(_model, site, Axis, "Add Axis to site");
             _model.SaveAs(_outputPath, StorageType.Ifc);
         }
         #endregion
+
+
+        //建立轴网 Axis Net
+        #region
+        public IfcGrid BuildAxis()
+        {
+            using (var txn = this._model.BeginTransaction("Create"))
+            {
+                List<IfcGridAxis> uAxes = new List<IfcGridAxis>();
+                List<IfcGridAxis> vAxes = new List<IfcGridAxis>();
+
+                var XLines = new List<IfcPolyline>();
+                var YLines = new List<IfcPolyline>();
+                double x1 = 0;
+                double x2 = 0;
+                double y1 = 0;
+                double y2 = 0;
+                foreach (var i in _placementMap[0].spacing)
+                    x2 += i;
+                for (int i = 0; i < _placementMap[0].span.Count; i++)
+                {
+                    XLines.Add(toolkit_factory.MakePolyLine(_model, toolkit_factory.MakeCartesianPoint(_model, x1, y1), toolkit_factory.MakeCartesianPoint(_model, x2, y1)));
+                    y1 += _placementMap[0].span[i];
+                }
+
+                x1 = 0; x2 = 0; y1 = 0; y2 = 0;
+                foreach (var i in _placementMap[0].span)
+                    y2 += i;
+                for (int i = 0; i < _placementMap[0].spacing.Count; i++)
+                {
+                    YLines.Add(toolkit_factory.MakePolyLine(_model, toolkit_factory.MakeCartesianPoint(_model, x1, y1), toolkit_factory.MakeCartesianPoint(_model, x1, y2)));
+                    x1 += _placementMap[0].spacing[i];
+                }
+
+                for (int i = 0; i < XLines.Count; i++)//与X轴平行的轴线，从下到上 A->Z
+                {
+                    string s = "A" + i;
+                    uAxes.Add(toolkit_factory.MakeGridAxis(_model, s, XLines[i]));
+                }
+
+                for (int i = 0; i < YLines.Count; i++)  //与Y轴平行的轴线，从左到右 1->10
+                {
+                    string s = "1" + i;
+                    uAxes.Add(toolkit_factory.MakeGridAxis(_model, s, YLines[i]));
+                }
+
+                //var net = CreateAxis(XLines, YLines);
+                ////net.UAxes = uAxes;
+                ////net.VAxes = vAxes;
+                //return net;
+                var axis = this._model.Instances.New<IfcGrid>();
+                axis.Name = "testAxis";
+                axis.ObjectType = "Single_Axis";
+                axis.UAxes = uAxes;
+                var curveSet = this._model.Instances.New<IfcGeometricCurveSet>();
+                curveSet.Elements.AddRange(XLines);
+                curveSet.Elements.AddRange(YLines);
+                
+
+                var shape = toolkit_factory.MakeShapeRepresentation(_model, 0, "FootPrint", "GeometricCurveSet", curveSet);
+                toolkit_factory.SetSurfaceColor(_model, curveSet, 124 / 255.0, 51 / 255.0, 49 / 255.0, 0.15);
+                axis.Representation = this._model.Instances.New<IfcProductDefinitionShape>(pd => pd.Representations.Add(shape));
+                axis.PredefinedType = IfcGridTypeEnum.RECTANGULAR;
+                txn.Commit();
+                return axis;
+
+            }
+        }
+
+        #endregion
+
 
         //slab code
         #region
@@ -199,8 +269,8 @@ namespace BuildingRepo
             using (var txn = this._model.BeginTransaction("CreateSlab"))
             {
                 var slab = this._model.Instances.New<IfcSlab>();
-                slab.Name = "testPlate";
-                slab.ObjectType = "Single_Plate";
+                slab.Name = "testSlab";
+                slab.ObjectType = "Single_Slab";
 
                 var PointSet = new List<IfcCartesianPoint>();
                 foreach (var point in Points)
@@ -233,25 +303,24 @@ namespace BuildingRepo
         #endregion
 
 
-
         //beam code
         #region
         public List<IfcBeam> BeamBuild()
         {
             var Beam = new List<IfcBeam>();
-            double width = 300;
-            double height = 600;
+            double width = 300;     //xDim
+            double height = 600;    //yDim
 
             //建主梁            
-            int count = _placementMap.Count;
-            double z = _placementMap[0].height;
-            for (int k = 0; k < count; k++)
+            double z = 0;
+            for (int k = 0; k < _placementMap.Count; k++)
             {
+                z += _placementMap[k].height;
                 double y = 0;
-                for (int j = 0; j <= count; j++)
+                for (int j = 0; j <= _placementMap[k].spacing.Count; j++)
                 {
                     double x = 0;
-                    for (int i = 0; i < count; i++)
+                    for (int i = 0; i < _placementMap[k].span.Count; i++)
                     {
                         (double, double, double) shape_heart = (x, y, z);
                         (double, double, double) extruded_point = (x + _placementMap[k].spacing[i], y, z);
@@ -259,40 +328,38 @@ namespace BuildingRepo
                         Beam.Add(CreateBeam(shape_heart, extruded_point, width, height));
                         x += _placementMap[k].spacing[i];
                     }
-                    if (j != count)
+                    if (j != _placementMap[k].spacing.Count)
                         y += _placementMap[k].span[j];
                 }
-                if (k + 1 < count)
-                    z += _placementMap[k + 1].height;
             }
 
             //次梁
-            z = _placementMap[0].height;
-            for (int k = 0; k < count; k++)
+            z = 0;
+            for (int k = 0; k < _placementMap.Count; k++)
             {
+                z += _placementMap[k].height;
                 double x = 0;
-                for (int j = 0; j <= count; j++)
+                for (int j = 0; j <= _placementMap[k].spacing.Count; j++)
                 {
                     double y = 0;
-                    for (int i = 0; i < count; i++)
+                    for (int i = 0; i < _placementMap[k].span.Count; i++)
                     {
                         (double, double, double) shape_heart = (x, y, z);
                         (double, double, double) extruded_point = (x, y + _placementMap[k].span[i], z);
-                        Beam.Add(CreateSecBeam(shape_heart, extruded_point, width, height));
+                        Beam.Add(CreateBeam(shape_heart, extruded_point, width, height,124,10,10));  //red = 124, green =10, blue =10 建出来为红色，将次梁渲染成红色
                         y += _placementMap[k].span[i];
                     }
-                    if (j != count)
+                    if (j != _placementMap[k].spacing.Count)
                         x += _placementMap[k].spacing[j];
                 }
-                if (k + 1 < count)
-                    z += _placementMap[k + 1].height;
             }
             return Beam;
         }
 
 
-        //咖啡色主梁
-        private IfcBeam CreateBeam((double x, double y, double z) shape_heart, (double x, double y, double z) extruded_point,double width, double height)
+        //咖啡色梁     （ red = 124,green = 51, blue = 49 建出来为咖啡色，将梁默认渲染成咖啡色）
+        private IfcBeam CreateBeam((double x, double y, double z) shape_heart, (double x, double y, double z) extruded_point,double width, double height,
+                                                         double red = 124, double green = 51, double blue = 49)
         {
             using (var txn = this._model.BeginTransaction("CreateBeam"))
             {
@@ -303,9 +370,7 @@ namespace BuildingRepo
                 var point1 = toolkit_factory.MakeCartesianPoint(_model, shape_heart);
                 var point2 = toolkit_factory.MakeCartesianPoint(_model, extruded_point);
 
-                var profile_point1 = toolkit_factory.MakeCartesianPoint(_model, 0-width/2, 0, 0);
-                var profile_point2 = toolkit_factory.MakeCartesianPoint(_model, width/2, 0, 0);
-                var profile = toolkit_factory.MakeCenterLineProfile(_model, profile_point1, profile_point2, height);
+                var profile = toolkit_factory.MakeRectangleProf(_model, width, height);
 
                 var solid = this._model.Instances.New<IfcExtrudedAreaSolid>();
                 solid.SweptArea = profile;
@@ -314,10 +379,7 @@ namespace BuildingRepo
                 solid.Position = toolkit_factory.MakeLocalAxisPlacement(_model, point1, solid_direction);
                 solid.Depth = toolkit_factory.GetLength(point1, point2);
 
-                toolkit_factory.SetSurfaceColor(_model, solid, 124.0 / 255.0, 51.0 / 255.0, 49.0 / 255.0, 0.15);
-
-               // toolkit_factory.SetSurfaceColor(_model, solid, 200.0 / 255.0, 20.0 / 255.0, 10.0 / 255.0, 0.15);
-               //用上面语句渲染成红色
+                toolkit_factory.SetSurfaceColor(_model, solid, red / 255.0, green / 255.0, blue / 255.0, 0.15);
 
                 var shape = toolkit_factory.MakeShapeRepresentation(_model, 3, "Body", "AdvancedSweptSolid", solid);
 
@@ -329,48 +391,7 @@ namespace BuildingRepo
             }
         }
 
-
-        //红色次梁
-        private IfcBeam CreateSecBeam((double x, double y, double z) shape_heart, (double x, double y, double z) extruded_point, double width, double height)
-        {
-            using (var txn = this._model.BeginTransaction("CreateBeam"))
-            {
-                var beam = this._model.Instances.New<IfcBeam>();
-                beam.Name = "testBeam";
-                beam.ObjectType = "Single_Beam";
-
-                var point1 = toolkit_factory.MakeCartesianPoint(_model, shape_heart);
-                var point2 = toolkit_factory.MakeCartesianPoint(_model, extruded_point);
-
-                var profile_point1 = toolkit_factory.MakeCartesianPoint(_model, 0 - width / 2, 0, 0);
-                var profile_point2 = toolkit_factory.MakeCartesianPoint(_model, width / 2, 0, 0);
-                var profile = toolkit_factory.MakeCenterLineProfile(_model, profile_point1, profile_point2, height);
-
-                var solid = this._model.Instances.New<IfcExtrudedAreaSolid>();
-                solid.SweptArea = profile;
-                solid.ExtrudedDirection = toolkit_factory.MakeDirection(_model, 0, 0, 1);
-                var solid_direction = toolkit_factory.MakeDirection(_model, point1, point2);
-                solid.Position = toolkit_factory.MakeLocalAxisPlacement(_model, point1, solid_direction);
-                solid.Depth = toolkit_factory.GetLength(point1, point2);
-
-                toolkit_factory.SetSurfaceColor(_model, solid, 150.0 / 255.0, 10.0 / 255.0, 10.0 / 255.0, 0.15);
-
-                // toolkit_factory.SetSurfaceColor(_model, solid, 200.0 / 255.0, 20.0 / 255.0, 10.0 / 255.0, 0.15);
-                //用上面语句渲染成红色
-
-                var shape = toolkit_factory.MakeShapeRepresentation(_model, 3, "Body", "AdvancedSweptSolid", solid);
-
-                beam.Representation = this._model.Instances.New<IfcProductDefinitionShape>(pd => pd.Representations.Add(shape));
-                beam.PredefinedType = IfcBeamTypeEnum.USERDEFINED;
-
-                txn.Commit();
-                return beam;
-            }
-
-        }
-
         #endregion
-
 
         #region
         //ParsePlacementMap函数：利用placemetMap中的建筑信息生成柱网。
@@ -407,24 +428,24 @@ namespace BuildingRepo
         public List<IfcColumn> ColumnBuild()
         {
             var Column = new List<IfcColumn>();
-            (double, double, double, double, double, double) column_profile = (-200, 0, 0, 200, 0, 0);
-            int count = _placementMap.Count;             
+            double XDim = 400;       //柱子尺寸 400*400
+            double YDim = 400;      
+
             double z = 0;
-            for (int k = 0; k<count;k++)
+            for (int k = 0; k < _placementMap.Count; k++)
             {
                 double y = 0;
-                for (int j = 0; j <= count; j++)
+                for (int j = 0; j <= _placementMap[k].span.Count; j++)
                 {
                     double x = 0;
-                    for (int i = 0; i <= count; i++)
+                    for (int i = 0; i <= _placementMap[k].spacing.Count; i++)
                     {
                         (double, double, double) startPoint = (x, y, z);
-                        (double, double, double) endPoint = (x, y, z + _placementMap[k].height);
-                        Column.Add(CreateColumn(startPoint, endPoint, column_profile));
-                        if (i != count)
+                        Column.Add(CreateColumn(startPoint, _placementMap[k].height,XDim,YDim));
+                        if (i != _placementMap[k].spacing.Count)
                             x += _placementMap[k].spacing[i];
                     }
-                    if(j!= count)
+                    if(j!= _placementMap[k].span.Count)
                         y += _placementMap[k].span[j];
                 }
                 z +=_placementMap[k].height;
@@ -433,16 +454,14 @@ namespace BuildingRepo
 
         }
 
-        private IfcColumn CreateColumn((double x, double y, double z) startPoint,double height,
-            (double x1, double y1, double z1, double x2, double y2, double z2) LineProfile)
+        private IfcColumn CreateColumn((double x, double y, double z) startPoint,double height,double xDim,double yDim)
         {
             var endpoint = (startPoint.x, startPoint.y, startPoint.z + height);
-            return CreateColumn(startPoint, endpoint, LineProfile);
+            return CreateColumn(startPoint, endpoint, xDim,yDim);
         }
 
     
-        private IfcColumn CreateColumn((double x, double y, double z) startPoint, (double x, double y, double z) endPoint,
-            (double x1, double y1, double z1, double x2, double y2, double z2) LineProfile)
+        private IfcColumn CreateColumn((double x, double y, double z) startPoint, (double x, double y, double z) endPoint,double xDim,double yDim)
         {
             using (var txn = this._model.BeginTransaction("CreateColumn"))
             {
@@ -452,10 +471,7 @@ namespace BuildingRepo
 
                 var point1 = toolkit_factory.MakeCartesianPoint(_model, startPoint.x, startPoint.y,startPoint.z);
                 var point2 = toolkit_factory.MakeCartesianPoint(_model, endPoint.x, endPoint.y, endPoint.z);
-
-                var profile_point1 = toolkit_factory.MakeCartesianPoint(_model, LineProfile.x1, LineProfile.y1, LineProfile.z1);
-                var profile_point2 = toolkit_factory.MakeCartesianPoint(_model, LineProfile.x2, LineProfile.y2, LineProfile.z2);
-                var profile = toolkit_factory.MakeCenterLineProfile(_model, profile_point1, profile_point2, 400);
+                var profile = toolkit_factory.MakeRectangleProf(_model, xDim, yDim);
 
 
                 var solid = this._model.Instances.New<IfcExtrudedAreaSolid>();
