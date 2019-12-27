@@ -144,8 +144,8 @@ namespace BuildingRepo
         {
             InitWCS();
             var site = toolkit_factory.CreateSite(_model, "Structure Site");
-            var Columns = BeamBuild();
-            var Beams = ColumnBuild();
+            var Columns = ColumnBuild();
+            var Beams = BeamBuild();
             var Slabs = SlabBuild();
             var Axis = BuildAxis();
             foreach (var column in Columns)
@@ -169,56 +169,53 @@ namespace BuildingRepo
                 List<IfcGridAxis> uAxes = new List<IfcGridAxis>();
                 List<IfcGridAxis> vAxes = new List<IfcGridAxis>();
 
-                var XLines = new List<IfcPolyline>();
+                var XLines = new List<IfcPolyline>(); 
                 var YLines = new List<IfcPolyline>();
-                double x1 = 0;
-                double x2 = 0;
-                double y1 = 0;
-                double y2 = 0;
+
+                double x1 = -5000, x2 = 5000, y1 = 0, y2 = 0;
                 foreach (var i in _placementMap[0].spacing)
                     x2 += i;
-                for (int i = 0; i < _placementMap[0].span.Count; i++)
+                for (int i = 0; i <= _placementMap[0].span.Count; i++)
                 {
                     XLines.Add(toolkit_factory.MakePolyLine(_model, toolkit_factory.MakeCartesianPoint(_model, x1, y1), toolkit_factory.MakeCartesianPoint(_model, x2, y1)));
-                    y1 += _placementMap[0].span[i];
+                    if (i != _placementMap[0].span.Count)
+                        y1 += _placementMap[0].span[i];
                 }
 
-                x1 = 0; x2 = 0; y1 = 0; y2 = 0;
+                x1 = 0; x2 = 0; y1 = -5000; y2 = 5000;
                 foreach (var i in _placementMap[0].span)
                     y2 += i;
-                for (int i = 0; i < _placementMap[0].spacing.Count; i++)
+                for (int i = 0; i <= _placementMap[0].spacing.Count; i++)
                 {
                     YLines.Add(toolkit_factory.MakePolyLine(_model, toolkit_factory.MakeCartesianPoint(_model, x1, y1), toolkit_factory.MakeCartesianPoint(_model, x1, y2)));
-                    x1 += _placementMap[0].spacing[i];
+                    if (i != _placementMap[0].spacing.Count)
+                        x1 += _placementMap[0].spacing[i];
                 }
 
                 for (int i = 0; i < XLines.Count; i++)//与X轴平行的轴线，从下到上 A->Z
                 {
-                    string s = "A" + i;
+                    string s = Convert.ToChar('A'+i).ToString();
                     uAxes.Add(toolkit_factory.MakeGridAxis(_model, s, XLines[i]));
                 }
 
                 for (int i = 0; i < YLines.Count; i++)  //与Y轴平行的轴线，从左到右 1->10
                 {
-                    string s = "1" + i;
-                    uAxes.Add(toolkit_factory.MakeGridAxis(_model, s, YLines[i]));
+                    string s = Convert.ToString(1+ i);
+                    vAxes.Add(toolkit_factory.MakeGridAxis(_model, s, YLines[i]));
                 }
 
-                //var net = CreateAxis(XLines, YLines);
-                ////net.UAxes = uAxes;
-                ////net.VAxes = vAxes;
-                //return net;
                 var axis = this._model.Instances.New<IfcGrid>();
                 axis.Name = "testAxis";
-                axis.ObjectType = "Single_Axis";
-                axis.UAxes = uAxes;
+                axis.ObjectType = "Single_AxisNet";
+                axis.UAxes.AddRange(uAxes);
+                axis.VAxes.AddRange(vAxes);
+
                 var curveSet = this._model.Instances.New<IfcGeometricCurveSet>();
                 curveSet.Elements.AddRange(XLines);
                 curveSet.Elements.AddRange(YLines);
-                
-
                 var shape = toolkit_factory.MakeShapeRepresentation(_model, 0, "FootPrint", "GeometricCurveSet", curveSet);
                 toolkit_factory.SetSurfaceColor(_model, curveSet, 124 / 255.0, 51 / 255.0, 49 / 255.0, 0.15);
+
                 axis.Representation = this._model.Instances.New<IfcProductDefinitionShape>(pd => pd.Representations.Add(shape));
                 axis.PredefinedType = IfcGridTypeEnum.RECTANGULAR;
                 txn.Commit();
@@ -317,10 +314,10 @@ namespace BuildingRepo
             {
                 z += _placementMap[k].height;
                 double y = 0;
-                for (int j = 0; j <= _placementMap[k].spacing.Count; j++)
+                for (int j = 0; j <= _placementMap[k].span.Count; j++)
                 {
                     double x = 0;
-                    for (int i = 0; i < _placementMap[k].span.Count; i++)
+                    for (int i = 0; i < _placementMap[k].spacing.Count; i++)
                     {
                         (double, double, double) shape_heart = (x, y, z);
                         (double, double, double) extruded_point = (x + _placementMap[k].spacing[i], y, z);
@@ -328,7 +325,7 @@ namespace BuildingRepo
                         Beam.Add(CreateBeam(shape_heart, extruded_point, width, height));
                         x += _placementMap[k].spacing[i];
                     }
-                    if (j != _placementMap[k].spacing.Count)
+                    if (j != _placementMap[k].span.Count)
                         y += _placementMap[k].span[j];
                 }
             }

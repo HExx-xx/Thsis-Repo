@@ -27,9 +27,9 @@ namespace UnitTestProject1
         {
             using (var buildingconst = new Building_factory())
             {
-                var spacing = new List<List<double>>() { new List<double>() { 8000, 8000 }, new List<double>() { 8000, 8000 } };//柱距8m
-                var span = new List<List<double>>() { new List<double>() { 7200, 7200 }, new List<double>() { 7200, 7200 } };
-                var Layer_height = new List<double>() { 3000, 4000 };
+                var spacing = new List<List<double>>() { new List<double>() { 8000, 5000,8000 ,5000}, new List<double>() { 8000, 5000,8000 ,5000},new List<double>() { 8000, 5000, 8000,5000 } };//柱距8m
+                var span = new List<List<double>>() { new List<double>() { 7200,3000, 7200 }, new List<double>() { 7200, 3000, 7200 }, new List<double>() { 7200,3000, 7200 } };
+                var Layer_height = new List<double>() {5000, 3000, 4000 };
                 buildingconst.GeneratePlacementMap(spacing, span, Layer_height);
                 buildingconst.Build();
 
