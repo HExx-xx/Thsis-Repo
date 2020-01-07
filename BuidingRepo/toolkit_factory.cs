@@ -22,6 +22,7 @@ namespace BuildingRepo
 {
     class toolkit_factory
     {
+
         public static IfcDirection MakeDirection(IfcStore m, double x = 0, double y = 0, double z = 0)
         {
             return m.Instances.New<IfcDirection>(d => d.SetXYZ(x, y, z));
@@ -139,9 +140,6 @@ namespace BuildingRepo
             });
         }
 
-
-
-
         //建立IfcGridAxis轴线1
         public static IfcGridAxis MakeGridAxis(IfcStore m,string axisLable,IfcPolyline l)
         {
@@ -152,7 +150,6 @@ namespace BuildingRepo
                 axis.SameSense = true;
             });
         }
-
         //建立IfcGridAxis轴线2
         public static IfcGridAxis MakeGridAxis(IfcStore m, string axisLable, IfcCartesianPoint p1, IfcCartesianPoint p2)
         {
