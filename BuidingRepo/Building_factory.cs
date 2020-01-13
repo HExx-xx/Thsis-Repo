@@ -137,6 +137,49 @@ namespace BuildingRepo
             }
         }
 
+        private void CreateMaterial(IfcDefinitionSelect t)
+        {
+            var material = _model.Instances.New<IfcMaterial>(mat =>
+            {
+                mat.Name = "C40";
+                mat.Category = "Concrete";
+            });
+            _model.Instances.New<IfcRelAssociatesMaterial>(ram =>
+            {
+                ram.RelatingMaterial = material;
+                ram.RelatedObjects.Add(t);
+            });
+            var MaterialCommon = _model.Instances.New<IfcMaterialProperties>(mp =>
+            {
+                mp.Name = "MaterialCommon";
+                mp.Material = material;
+                var massDensity = _model.Instances.New<IfcPropertySingleValue>(p =>
+                {
+                    p.Name = "MassDensity";
+                    p.NominalValue = new IfcMassDensityMeasure(2.5e-6);
+                });
+                mp.Properties.Add(massDensity);
+            });
+            var MaterialMechanical = _model.Instances.New<IfcMaterialProperties>(mp =>
+            {
+                mp.Name = "MagterialMechanical";
+                mp.Material = material;
+                var youngModulus = _model.Instances.New<IfcPropertySingleValue>(p =>
+                {
+                    p.Name = "YoungModulus";
+                    p.NominalValue = new IfcModulusOfElasticityMeasure(3.3e4);
+                });
+                var PoissonRatio = _model.Instances.New<IfcPropertySingleValue>(p =>
+                {
+                    p.Name = "PoissonRatio";
+                    p.NominalValue = new IfcPositiveRatioMeasure(0.3);
+                });
+                mp.Properties.AddRange(new List<IfcPropertySingleValue>() { youngModulus, PoissonRatio });
+            });
+
+        }
+
+
 
         //building code
         #region
@@ -282,6 +325,8 @@ namespace BuildingRepo
                 column.Name = "testColumn";
                 column.ObjectType = "Single_Column";
 
+                CreateMaterial(column);
+
                 var point1 = toolkit_factory.MakeCartesianPoint(_model, startPoint.x, startPoint.y, startPoint.z);
                 var point2 = toolkit_factory.MakeCartesianPoint(_model, endPoint.x, endPoint.y, endPoint.z);
                 var profile = toolkit_factory.MakeRectangleProf(_model, xDim, yDim);
@@ -391,6 +436,8 @@ namespace BuildingRepo
                 beam.Name = "testBeam";
                 beam.ObjectType = "Single_Beam";
 
+                CreateMaterial(beam);
+
                 var point1 = toolkit_factory.MakeCartesianPoint(_model, shape_heart);
                 var point2 = toolkit_factory.MakeCartesianPoint(_model, extruded_point);
 
@@ -465,6 +512,8 @@ namespace BuildingRepo
                 slab.Name = "testSlab";
                 slab.ObjectType = "Single_Slab";
 
+                CreateMaterial(slab);
+
                 var PointSet = new List<IfcCartesianPoint>();
                 foreach (var point in Points)
                 {
@@ -538,6 +587,8 @@ namespace BuildingRepo
                 var wall = this._model.Instances.New<IfcWall>();
                 wall.Name = "testWall";
                 wall.ObjectType = "ShearWall";
+
+                CreateMaterial(wall);
 
                 var PointSet = new List<IfcCartesianPoint>();
                 foreach (var point in Points)
