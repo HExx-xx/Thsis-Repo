@@ -22,7 +22,7 @@ namespace ifc2APDL.AnsysFactory.models
     {
         public int ID { get; set; }
         public AnsysSectionTypeEnum type { get; set; }
-        public AnsysElementTypeEnum subtype { get; set; }
+        public AnsysSectionSubtypeEnum subtype { get; set; }
         public override string ToString()
         {
             return string.Format($"SECTYPE,{ID},{type},{subtype}");

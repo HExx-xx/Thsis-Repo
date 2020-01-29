@@ -5,11 +5,13 @@ VisualStudioVersion = 16.0.29123.88
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingRepo", "BuidingRepo\BuildingRepo.csproj", "{1FFC19BB-D59B-493C-B872-EE89F275F189}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProject1", "UnitTestProject1\UnitTestProject1.csproj", "{6BB14344-369F-4269-BC8B-5B6E0F397941}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{6BB14344-369F-4269-BC8B-5B6E0F397941}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Utilities", "Utilities\Utilities.csproj", "{EB5BDD2B-68AE-4335-8C85-BD41F3E0D169}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ifc2APDL.AnsysFactory", "ifc2APDL\ifc2APDL.AnsysFactory.csproj", "{E850F1E1-BF63-43AB-8738-27ACD95E6D53}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ifc2APDL.AnsysFactory", "ifc2APDL\ifc2APDL.AnsysFactory.csproj", "{E850F1E1-BF63-43AB-8738-27ACD95E6D53}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ifc2APDL.Translator", "ifc2APDL.Translator\ifc2APDL.Translator.csproj", "{93F5B0AB-D605-4DE3-8DDC-D3FBA88D3C87}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{E850F1E1-BF63-43AB-8738-27ACD95E6D53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E850F1E1-BF63-43AB-8738-27ACD95E6D53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E850F1E1-BF63-43AB-8738-27ACD95E6D53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93F5B0AB-D605-4DE3-8DDC-D3FBA88D3C87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93F5B0AB-D605-4DE3-8DDC-D3FBA88D3C87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93F5B0AB-D605-4DE3-8DDC-D3FBA88D3C87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93F5B0AB-D605-4DE3-8DDC-D3FBA88D3C87}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

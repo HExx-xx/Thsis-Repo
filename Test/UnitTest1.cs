@@ -22,11 +22,10 @@ class parament
     }
 }
 
-
-namespace UnitTestProject1
+namespace Test
 {
     [TestClass]
-    public class UnitTest
+    public class UnitTest1
     { 
 
         [TestMethod]
@@ -40,11 +39,9 @@ namespace UnitTestProject1
                 var Layer_height = parament.getList<double>(4000, 10);
                 FrameCoreCube.GeneratePlacementMap(spacing, span, Layer_height);
                 FrameCoreCube.Build();
-
-
-
             }
         }
     }
+
 }
 

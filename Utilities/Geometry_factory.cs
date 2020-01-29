@@ -9,9 +9,9 @@ using Xbim.Ifc4.Interfaces;
 
 namespace Utilities
 {
-    public class Geometry_factory
-    {
-        private static readonly double Tolerance = 1e-9;
-        public static bool isSIUnits = true;
-    }
+    //public class Geometry_factory
+    //{
+    //    private static readonly double Tolerance = 1e-9;
+    //    public static bool isSIUnits = true;
+    //}
 }

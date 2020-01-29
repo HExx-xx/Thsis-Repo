@@ -29,11 +29,11 @@ namespace ifc2APDL.AnsysFactory.models
             C3 = 0;
             C4 = 0;
         }
-        public AnsysMaterial(int id,AnsysMaterialLableEnum lab)
+        public AnsysMaterial(int id,AnsysMaterialLableEnum lab,double c0)
         {
             Lab = lab;
             ID = id;
-            C0 = 0;
+            C0 = c0;
             C1 = 0;
             C2 = 0;
             C3 = 0;
