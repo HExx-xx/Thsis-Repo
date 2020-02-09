@@ -1,0 +1,54 @@
+!--------------------------------------
+	!Ansys Test File
+	!Data/Time:2020/2/10 1:20:28
+	!Produced by :ifc2APDL.AnsysFactory
+	!Author:HSX
+!--------------------------------------
+/PREP7
+
+!Elements
+ET,1,BEAM188
+ET,2,SHELL63
+
+!Materials
+MP,EX,1,33000000000
+MP,PRXY,1,0.2
+MP,DENS,1,2500
+MP,EX,2,200000000000
+MP,PRXY,2,0.3
+MP,DENS,2,7850
+
+!Sections
+SECTYPE,1,BEAM,RECT
+SECDATA,0.4,0.4
+SECTYPE,2,BEAM,RECT
+SECDATA,0.2,0.4
+
+!RealConstants
+R,1,0.1,0.1,0.1,0.1,0,0
+R,2,0.2,0.2,0.2,0.2,0,0
+
+!--------------------------------------Modeling--------------------------------------
+
+!Build KeyPoints
+K,1,0,0,0
+K,2,4,0,0
+K,3,9,0,0
+K,4,13,0,0
+K,5,4,4,0
+
+/view,1,1,1,1
+/ angle,1
+/ rep
+
+!Build Lines
+L,1,2
+L,3,4
+L,1,5
+
+!Build Areas
+A,1,2,3
+A,1,2,3,4
+
+!Build Aglues
+AGLUE,0,0

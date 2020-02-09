@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ifc2APDL.AnsysFactory.models
 {
-    class AnsysAmesh
+    public class AnsysAmesh
     {
         string AL1 { get; set; }
         int AL2 { get; set; }

@@ -20,11 +20,11 @@ namespace Test
             var ans = new AnsysStore();
 
             //Add element
-            var ele = new List<AnsysElement>();
+            var ele = new List<AnsysElement>()
             {
-                new AnsysElement() { ID = 1, Type = AnsysElementTypeEnum.BEAM188 };
-                new AnsysElement() { ID = 2, Type = AnsysElementTypeEnum.SHELL63 };
-            }
+                new AnsysElement() { ID = 1, Type = AnsysElementTypeEnum.BEAM188 },
+                new AnsysElement() { ID = 2, Type = AnsysElementTypeEnum.SHELL63 }
+            };
             ans.AddElement(ele);
 
             //Add material
@@ -54,6 +54,44 @@ namespace Test
                 }
             };
             ans.AddSection(sec);
+
+            //Add R
+            var rel = new List<AnsysRealConstant>()
+            {
+                new AnsysRealConstant(1,0.1,0.1,0.1,0.1),
+                new AnsysRealConstant(2,0.2,0.2,0.2,0.2)
+            };
+            ans.AddRealConstant(rel);
+
+            //Add K
+            var nod = new List<AnsysKeypoint>()
+            {
+                new AnsysKeypoint(1),
+                new AnsysKeypoint(2,4),
+                new AnsysKeypoint(3,9),
+                new AnsysKeypoint(4,13),
+                new AnsysKeypoint(5,4,4)
+            };
+            ans.AddKeypoint(nod);
+
+            //Add Line
+            var lin = new List<AnsysLine>
+            {
+                new AnsysLine(ans.IntToAnsyskeypoint(1),ans.IntToAnsyskeypoint(2)),
+                new AnsysLine(ans.IntToAnsyskeypoint(3),ans.IntToAnsyskeypoint(4)),
+                new AnsysLine(ans.IntToAnsyskeypoint(1),ans.IntToAnsyskeypoint(5))
+            };
+            ans.AddLine(lin);
+            //Add Area
+            var are = new List<AnsysArea>
+            {
+                new AnsysArea(ans.IntToAnsyskeypoint(1),ans.IntToAnsyskeypoint(2),ans.IntToAnsyskeypoint(3)),
+                new AnsysArea(ans.IntToAnsyskeypoint(1),ans.IntToAnsyskeypoint(2),ans.IntToAnsyskeypoint(3),ans.IntToAnsyskeypoint(4))
+            };
+            ans.AddArea(are);
+            //Add Aglue
+            var aglue = new AnsysAglue(ans.IntToAnsysarea(1), ans.IntToAnsysarea(2));
+            ans.AddAglue(aglue);
 
             ans.WriteAPDLFile(PATH);
             Assert.IsTrue(File.Exists(PATH));

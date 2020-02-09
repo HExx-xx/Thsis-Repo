@@ -7,7 +7,7 @@ namespace ifc2APDL.AnsysFactory.models
     class AnsysLatt                      //Associates element attributes with the selected, unmeshed lines.
     {
         AnsysMaterial mat { get; set; }
-        AnsysRealConstants real { get; set; }
+        AnsysRealConstant real { get; set; }
         AnsysMaterial type { get; set; }
         AnsysSecType secnum { get; set; }
         AnsysKeypoint k1 { get; set; }

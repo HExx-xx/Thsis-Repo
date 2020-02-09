@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ifc2APDL\ifc2APDL.AnsysFactory.csproj" />
+    <ProjectReference Include="..\Utilities\Utilities.csproj" />
   </ItemGroup>
 
 </Project>

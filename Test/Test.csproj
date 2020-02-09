@@ -114,6 +114,7 @@
     <Compile Include="AnsysTest.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TranslateTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -122,6 +123,10 @@
     <ProjectReference Include="..\BuidingRepo\BuildingRepo.csproj">
       <Project>{1ffc19bb-d59b-493c-b872-ee89f275f189}</Project>
       <Name>BuildingRepo</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ifc2APDL.Translator\ifc2APDL.Translator.csproj">
+      <Project>{93f5b0ab-d605-4de3-8ddc-d3fba88d3c87}</Project>
+      <Name>ifc2APDL.Translator</Name>
     </ProjectReference>
     <ProjectReference Include="..\ifc2APDL\ifc2APDL.AnsysFactory.csproj">
       <Project>{e850f1e1-bf63-43ab-8738-27acd95e6d53}</Project>

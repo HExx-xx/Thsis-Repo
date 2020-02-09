@@ -68,7 +68,7 @@ namespace BuildingRepo
             return model;
         }
 
-        public Building_factory(string outputPath = "../../TestFiles/girder.ifc")
+        public Building_factory(string outputPath = "../../TestFiles/building.ifc")
         {
             _model = CreateAndInitModel(_projectName);
             InitWCS();
@@ -190,8 +190,8 @@ namespace BuildingRepo
             var Columns = ColumnBuild();
             var Beams = BeamBuild();
             var Slabs = SlabBuild();
-            var Axis = BuildAxis();
             var Walls = WallBuild();
+            var Axis = BuildAxis();
             foreach (var column in Columns)
                 toolkit_factory.AddPrductIntoSpatial(_model, site, column, "Add column to site");
             foreach (var beam in Beams)
@@ -276,6 +276,7 @@ namespace BuildingRepo
         public List<IfcColumn> ColumnBuild()
         {
             var Column = new List<IfcColumn>();
+
             double XDim = 400;       //柱子尺寸 400*400
             double YDim = 400;
 
@@ -553,25 +554,25 @@ namespace BuildingRepo
             List<(double, double, double)> Points = new List<(double, double, double)>();
             double z = 0;
             for (int k = 0; k < _placementMap.Count-1; k++)
-            {
+            {     //点逆时针输入，先输入L型外边的三个点。
                 z += _placementMap[k].height;
-                var tmp = new List<(double, double, double)> { (4000-100, 4000-100, z), (4000 + 2000, 4000 - 100, z), (4000+2000, 4000+100, z),
-                    (4000+100, 4000+100, z), (4000+100, 4000+2000, z),(4000-100,4000+2000,z) ,(4000-100,4000-100,z)};
+                var tmp = new List<(double, double, double)> {(4000-100,4000+2000,z) , (4000-100, 4000-100, z), (4000 + 2000, 4000 - 100, z), 
+                    (4000+2000, 4000+100, z),(4000+100, 4000+100, z), (4000+100, 4000+2000, z),(4000-100,4000+2000,z)};
                 Points.AddRange(tmp);
                 Wall.Add(CreateWall(Points, 4000));
                 Points.Clear();
-                tmp = new List<(double, double, double)> { (9000+100,4000-100,z),(9000+100,4000+2000,z),(9000-100,4000+2000,z),
-                    (9000-100,4000+100,z),(9000-2000,4000+100,z),(9000-2000,4000-100,z),(9000+100,4000-100,z)};
+                tmp = new List<(double, double, double)> { (9000+100,4000+2000,z),(9000+100,4000-100,z),(9000-2000,4000-100,z),
+                    (9000-2000,4000+100,z),(9000-100,4000+100,z),(9000-100,4000+2000,z),(9000+100,4000+2000,z)};
                 Points.AddRange(tmp);
                 Wall.Add(CreateWall(Points, 4000));
                 Points.Clear();
-                tmp = new List<(double, double, double)> { (4000-100,9000+100,z),(4000+2000,9000+100,z),(4000+2000,9000-100,z),
-                    (4000+100,9000-100,z),(4000+100,9000-2000,z),(4000-100,9000-2000,z),(4000-100,9000+100,z)};
+                tmp = new List<(double, double, double)> { (4000-100,9000-2000,z),(4000-100,9000+100,z),(4000+2000,9000+100,z),
+                    (4000+2000,9000-100,z),(4000+100,9000-100,z),(4000+100,9000-2000,z),(4000-100,9000-2000,z)};
                 Points.AddRange(tmp);
                 Wall.Add(CreateWall(Points, 4000));
                 Points.Clear();
-                tmp = new List<(double, double, double)> { (9000+100,9000+100,z),(9000+100,9000-2000,z),(9000-100,9000-2000,z),
-                    (9000-100,9000-100,z),(9000-2000,9000-100,z),(9000-2000,9000+100,z),(9000+100,9000+100,z)};
+                tmp = new List<(double, double, double)> { (9000-2000,9000+100,z),(9000+100,9000+100,z),(9000+100,9000-2000,z),
+                    (9000-100,9000-2000,z),(9000-100,9000-100,z),(9000-2000,9000-100,z),(9000-2000,9000+100,z)};
                 Points.AddRange(tmp);
                 Wall.Add(CreateWall(Points, 4000));
                 Points.Clear();

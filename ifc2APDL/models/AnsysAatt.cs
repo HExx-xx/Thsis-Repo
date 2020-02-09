@@ -7,7 +7,7 @@ namespace ifc2APDL.AnsysFactory.models
     class AnsysAatt
     {
         AnsysMaterial mat { get; set; }
-        AnsysRealConstants real { get; set; }
+        AnsysRealConstant real { get; set; }
         AnsysMaterial type { get; set; }
         AnsysSecType secn { get; set; }
         public override string ToString()
