@@ -10,7 +10,6 @@ namespace ifc2APDL.AnsysFactory.models
         double X { get; set; }
         double Y { get; set; }
         double Z { get; set; }
-
         public AnsysKeypoint(long id, double x=0, double y=0, double z=0)
         {
             ID = id;
@@ -18,8 +17,6 @@ namespace ifc2APDL.AnsysFactory.models
             Y = y;
             Z = z;
         }
-
-
         public override string ToString()
         {
             return string.Format($"K,{ID},{X},{Y},{Z}");

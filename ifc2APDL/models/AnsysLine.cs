@@ -19,7 +19,6 @@ namespace ifc2APDL.AnsysFactory.models
         {
             return string.Format($"L,{K1.ID},{K2.ID}");
         }
-
     }
 
 }

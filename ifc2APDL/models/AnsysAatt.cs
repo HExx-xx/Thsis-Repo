@@ -4,15 +4,31 @@ using System.Text;
 
 namespace ifc2APDL.AnsysFactory.models
 {
-    class AnsysAatt
+    public class AnsysAatt
     {
         AnsysMaterial mat { get; set; }
         AnsysRealConstant real { get; set; }
-        AnsysMaterial type { get; set; }
-        AnsysSecType secn { get; set; }
+        AnsysElement type { get; set; }
+        AnsysSection secn { get; set; }
+        public AnsysAatt(AnsysMaterial Mat = null, AnsysRealConstant Real = null, AnsysElement Type = null, AnsysSection Sec = null)
+        {
+            mat = Mat;
+            real = Real;
+            type = Type;
+            secn = Sec;
+        }
         public override string ToString()
         {
-            return string.Format($"AATT,{mat.ID},{real.ID},{type.ID},,{secn.ID}");
+            string ans = "AATT";
+            if (mat == null) ans += ",";
+            else ans += string.Format($",{mat.ID}");
+            if (real == null) ans += ",";
+            else ans += string.Format($",{real.ID}");
+            if (type == null) ans += ",";
+            else ans += string.Format($",{type.ID}");
+            if (secn == null) ans += ",,";
+            else ans += string.Format($",{secn.type.ID}");
+            return ans;
         }
     }
 }

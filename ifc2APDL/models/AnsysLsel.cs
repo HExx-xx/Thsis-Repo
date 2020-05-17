@@ -25,7 +25,6 @@ namespace ifc2APDL.AnsysFactory.models
         double VMAX { get; set; }
         int VINC { get; set; }
         int KSWP { get; set; }
-
         public override string ToString()
         {
             if (Type == LselTypeEnum.S || Type == LselTypeEnum.R || Type == LselTypeEnum.A || Type == LselTypeEnum.U)
@@ -33,6 +32,5 @@ namespace ifc2APDL.AnsysFactory.models
             else
                 return string.Format($"LSEL,{Type}");
         }
-
     }
 }

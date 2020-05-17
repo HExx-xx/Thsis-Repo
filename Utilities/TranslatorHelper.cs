@@ -15,11 +15,11 @@ namespace Utilities
 {
     public class TranslatorHelper
     {
-        public static List<AnsysMaterial> TranslateMaterial(Dictionary<string,IIfcMaterial> set)
+        public static List<AnsysMaterial> TranslateMaterial(Dictionary<string, IIfcMaterial> set)
         {
             var mats = new List<AnsysMaterial>();
             int id = 1;
-            foreach(var single in set)
+            foreach (var single in set)
             {
                 var mp = new Dictionary<string, double>();
                 foreach (var p_set in single.Value.HasProperties)
@@ -65,52 +65,51 @@ namespace Utilities
                     };
                 }
                 id++;
-                
+
             }
             return mats;
         }
 
-        public static AnsysElement TranslateElement(List<IIfcDefinitionSelect> t)
+        public static AnsysElement TranslateElement(string s)
         {
-            var el = new AnsysElement();
-            if (t.FirstOrDefault() is IIfcColumn || t.FirstOrDefault() is IIfcBeam)
-                el.Type = AnsysElementTypeEnum.BEAM188;
-            else if (t.FirstOrDefault() is IIfcSlab || t.FirstOrDefault() is IIfcWall)
-                el.Type = AnsysElementTypeEnum.SHELL63;
-            return el;
+            var ele = new AnsysElement();
+            if (s == "Column" || s == "Beam")
+                ele.Type = AnsysElementTypeEnum.BEAM188;
+            else if (s == "Slab" || s == "Wall")
+                ele.Type = AnsysElementTypeEnum.SHELL63;
+            return ele;
         }
-
-
-
-        public static (double,double) TranslateProfile(IIfcExtrudedAreaSolid solid)
+        public static (double, double) TranslateProfile(IIfcExtrudedAreaSolid solid)
         {
-            double x=0, y=0;
+            double x = 0, y = 0;
             if (solid.SweptArea is IIfcRectangleProfileDef rp)
             {
                 x = rp.XDim;
                 y = rp.YDim;
             }
-            return (x,y);
+            return (x, y);
         }
-        public static List<AnsysSection>TranslateSection(Dictionary<int,(double,double)> profiles)
-        { 
+        public static List<AnsysSection> TranslateSection(Dictionary<int, (double, double)> profiles)
+        {
             var secs = new List<AnsysSection>();
-            foreach(var pro in profiles)
+            foreach (var pro in profiles)
             {
                 var cross = new AnsysSection()
                 {
                     type = new AnsysSecType()
-                        {
+                    {
                         ID = pro.Key,
                         type = AnsysSectionTypeEnum.BEAM,
                         subtype = AnsysSectionSubtypeEnum.RECT
-                        },
+                    },
                     data = new AnsysSecData() { v1 = pro.Value.Item1, v2 = pro.Value.Item2 }
                 };
                 secs.Add(cross);
             }
             return secs;
         }
+        
+      //  public static int TranslateProfileID((double,double)pro,Dictionary<int,(double,double)>Pros){}
 
         public static List<(double, double, double)> TranslateKP(IIfcExtrudedAreaSolid solid)
         {
@@ -125,30 +124,29 @@ namespace Utilities
                 kps.Add((endpoint.X, endpoint.Y, endpoint.Z));
             }
             else if (solid.SweptArea is IIfcArbitraryClosedProfileDef acp)
-            { 
-                if(acp.OuterCurve is IIfcPolyline pl)
+            {
+                if (acp.OuterCurve is IIfcPolyline pl)
                 {
-                    for(int i = 0;i<pl.Points.Count-1;i++)
+                    for (int i = 0; i < pl.Points.Count - 1; i++)
                     {
                         var kp = ToXbimPoint3D(pl.Points[i]);
                         kps.Add((kp.X, kp.Y, kp.Z));
                     }
-
                 }
-
             }
             return kps;
         }
+
 
         public static double TranslateWallR(IIfcExtrudedAreaSolid solid)
         {
             double r = 0;
             if (solid.SweptArea is IIfcArbitraryClosedProfileDef acp)
             {
-                if(acp.OuterCurve is IIfcPolyline pl)
+                if (acp.OuterCurve is IIfcPolyline pl)
                 {
                     r = GetLength(pl.Points[0], pl.Points[1]);
-                    for(int i =1;i<pl.Points.Count-1;i++)
+                    for (int i = 1; i < pl.Points.Count - 1; i++)
                     {
                         var l = GetLength(pl.Points[i], pl.Points[i + 1]);
                         if (r > l)
@@ -157,44 +155,139 @@ namespace Utilities
                 }
             }
             return r;
-              
-        }
-        public static List<(double,double,double)> TranslateWallKP(IIfcExtrudedAreaSolid solid,double realconstant)
+        } // GET RealConstant
+
+        public static List<(double, double, double)> TranslateWallKP(IIfcExtrudedAreaSolid solid, double realconstant, double height)
         {
             var kps = new List<(double, double, double)>();
-            (double, double, double) kp1 = (0, 0, 0);
-            (double, double, double) kp2 = (0, 0, 0);
-            (double, double, double) kp3 = (0, 0, 0);
             if (solid.SweptArea is IIfcArbitraryClosedProfileDef acp)
             {
-                if(acp.OuterCurve is IIfcPolyline pl)
+                if (acp.OuterCurve is IIfcPolyline pl)
                 {
-                    for (int i = 0; i < pl.Points.Count - 1; i++)
+                    if (pl.Points.Count == 7)
                     {
-                        if (GetLength(pl.Points[i], pl.Points[i + 1]) - realconstant < 0.01)
-                            if (pl.Points[i].X == pl.Points[i + 1].X)
+                        double x1, x2, x3, y1, y2, y3, z = pl.Points[0].Z;
+                        if (GetLength(pl.Points[0], pl.Points[5]) - realconstant < 0.01)
+                        {
+                            if (pl.Points[0].X == pl.Points[5].X)
                             {
-                                kp1.Item1 = pl.Points[i].X;
-                                kp1.Item2 = (pl.Points[i].Y + pl.Points[i + 1].Y) / 2;
-                                kp1.Item3 = pl.Points[i].Z;
+                                x1 = pl.Points[0].X; y1 = (pl.Points[0].Y + pl.Points[5].Y) / 2;
+                                x3 = (pl.Points[2].X + pl.Points[3].X) / 2; y3 = pl.Points[2].Y;
+                                x2 = x3; y2 = y1;
                             }
-                            else if (pl.Points[i].Y == pl.Points[i + 1].Y)
+                            else     //0、5点y轴坐标一样
                             {
-                                kp2.Item1 = (pl.Points[i].X + pl.Points[i + 1].X) / 2;
-                                kp2.Item2 = pl.Points[i].Y;
-                                kp2.Item3 = pl.Points[i].Z;
+                                x1 = (pl.Points[0].X + pl.Points[5].X) / 2; y1 = pl.Points[0].Y;
+                                x3 = pl.Points[2].X; y3 = (pl.Points[2].Y + pl.Points[3].Y) / 2;
+                                x2 = x1; y2 = y3;
                             }
+                        }
+                        else if (GetLength(pl.Points[0], pl.Points[1]) - realconstant < 0.01)
+                        {
+                            if (pl.Points[0].X == pl.Points[1].X)
+                            {
+                                x1 = pl.Points[0].X; y1 = (pl.Points[0].Y + pl.Points[1].Y) / 2;
+                                x3 = (pl.Points[3].X + pl.Points[4].X) / 2; y3 = pl.Points[3].Y;
+                                x2 = x3; y2 = y1;
+                            }
+                            else
+                            {
+                                x1 = (pl.Points[0].X + pl.Points[1].X) / 2; y1 = pl.Points[0].Y;
+                                x3 = pl.Points[3].X; y3 = (pl.Points[3].Y + pl.Points[4].Y) / 2;
+                                x2 = x1; y2 = y3;
+                            }
+                        }
+                        else
+                        {
+                            if (pl.Points[1].X == pl.Points[2].X)
+                            {
+                                x1 = pl.Points[1].X; y1 = (pl.Points[1].Y + pl.Points[2].Y) / 2;
+                                x3 = (pl.Points[4].X + pl.Points[5].X) / 2; y3 = pl.Points[4].Y;
+                                x2 = x3; y2 = y1;
+                            }
+                            else
+                            {
+                                x1 = (pl.Points[1].X + pl.Points[2].X) / 2; y1 = pl.Points[1].Y;
+                                x3 = pl.Points[4].X; y3 = (pl.Points[4].Y + pl.Points[5].Y) / 2;
+                                x2 = x1; y2 = y3;
+                            }
+                        }
+                        kps.AddRange(new List<(double, double, double)> { (x1, y1, z), (x2, y2, z), (x3, y3, z), (x1, y1, z + height), (x2, y2, z + height), (x3, y3, z + height) });
                     }
-                    kp3.Item1 = kp2.Item1;
-                    kp3.Item2 = kp1.Item2;
-                    kp3.Item3 = kp1.Item3;
+                    if (pl.Points.Count == 9)
+                    {
+                        double x1, x2, x3, x4, y1, y2, y3, y4, z = pl.Points[0].Z;
+                        var tmps = new List<(double, double)>();
+                        if (GetLength(pl.Points[0], pl.Points[7]) - realconstant < 0.01)
+                        {
+                            if (pl.Points[0].X == pl.Points[7].X)
+                                tmps.Add((pl.Points[0].X, (pl.Points[0].Y + pl.Points[7].Y) / 2));
+                            else if (pl.Points[0].Y == pl.Points[7].Y)
+                                tmps.Add(((pl.Points[0].X + pl.Points[7].X) / 2, pl.Points[0].Y));
+                        }
+                        for (int i = 0; i < 8; i++)
+                        {
+                            if (GetLength(pl.Points[i], pl.Points[i + 1]) - realconstant < 0.01)
+                                if (pl.Points[i].X == pl.Points[i + 1].X)
+                                    tmps.Add((pl.Points[i].X, (pl.Points[i].Y + pl.Points[i + 1].Y) / 2));
+                                else if (pl.Points[i].Y == pl.Points[i + 1].Y)
+                                    tmps.Add(((pl.Points[i].X + pl.Points[i + 1].X) / 2, pl.Points[i].Y));
+                        }
+                        if((tmps[0].Item1!=tmps[1].Item1)&&(tmps[0].Item1!=tmps[2].Item1)&&(tmps[1].Item1!=tmps[2].Item1))
+                        {
+                            if(tmps[0].Item2==tmps[1].Item2)
+                            {
+                                x1 = tmps[0].Item1; y1 = tmps[0].Item2;
+                                x2 = tmps[1].Item1;y2 = tmps[1].Item2;
+                                x4= tmps[2].Item1; y4 = tmps[2].Item2;
+                                x3 =x4; y3 =y1;
+                            }
+                            else if(tmps[0].Item2 == tmps[2].Item2)
+                            {
+                                x1 = tmps[0].Item1; y1 = tmps[0].Item2;
+                                x2 = tmps[2].Item1; y2 = tmps[2].Item2;
+                                x4 = tmps[1].Item1; y4 = tmps[1].Item2;
+                                x3 = x4; y3 = y1;
+                            }
+                            else
+                            {
+                                x1 = tmps[1].Item1; y1 = tmps[1].Item2; 
+                                x2 = tmps[2].Item1; y2 = tmps[2].Item2;
+                                x4 = tmps[0].Item1; y4 = tmps[0].Item2;
+                                x3 = x4; y3 = y1;
+                            }
+                        }
+                        else
+                        {
+                            if(tmps[0].Item1 == tmps[1].Item1)
+                            {
+                                x1 = tmps[0].Item1; y1 = tmps[0].Item2;
+                                x2 = tmps[1].Item1; y2 = tmps[1].Item2;
+                                x4 = tmps[2].Item1; y4 = tmps[2].Item2;
+                                x3 = x1; y3 = y4;
+                            }
+                            else if (tmps[0].Item1 == tmps[2].Item1)
+                            {
+                                x1 = tmps[0].Item1; y1 = tmps[0].Item2;
+                                x2 = tmps[2].Item1; y2 = tmps[2].Item2;
+                                x4 = tmps[1].Item1; y4 = tmps[1].Item2;
+                                x3 = x1; y3 = y4;
+                            }
+                            else
+                            {
+                                x1 = tmps[1].Item1; y1 = tmps[1].Item2;
+                                x2 = tmps[2].Item1; y2 = tmps[2].Item2;
+                                x4 = tmps[0].Item1; y4 = tmps[0].Item2;
+                                x3 = x1; y3 = y4;
+                            }
+                        }
+                        kps.AddRange(new List<(double, double, double)> { (x1, y1, z), (x2, y2, z), (x3, y3, z), (x4, y4, z), (x1, y1, z + height), (x2, y2, z + height), (x3, y3, z + height), (x4, y4, z + height) });
+                    }
                 }
-            }
-            kps.Add(kp1);
-            kps.Add(kp2);
-            kps.Add(kp3);
+             }
             return kps;
         }
+
 
         public static (int,int) GetLineID(List<(double,double,double)> kps, Dictionary<int, (double, double, double)>KPs)
         {
@@ -209,47 +302,93 @@ namespace Utilities
             return (ID1, ID2);
             
         }
-        public static (int,int,int,int)GetAreaID(List<(double,double,double)>kps,Dictionary<int,(double,double,double)>KPs)
+        public static List<int>GetAreaID(List<(double,double,double)>kps,Dictionary<int,(double,double,double)>KPs)
         {
-            int ID1=0,ID2=0,ID3=0,ID4 = 0;
-            for(int i = 1;i<=KPs.Count;i++)
+            var areaID= new List<int>();
+            int ID1=0,ID2=0,ID3=0,ID4 = 0,ID5=0;
+            if (kps.Count == 3)
             {
-                if (KPs[i] == kps[0])
-                    ID1 = i;
-                if (KPs[i] == kps[1])
-                    ID2 = i;
-                if (KPs[i] == kps[2])
-                    ID3 = i;
-                if (KPs[i] == kps[3])
-                    ID4 = i;
+                for (int i = 1; i <= KPs.Count; i++)
+                {
+                    if (KPs[i] == kps[0])
+                        ID1 = i;
+                    if (KPs[i] == kps[1])
+                        ID2 = i;
+                    if (KPs[i] == kps[2])
+                        ID3 = i;
+                }
+                areaID.AddRange(new List<int> { ID1, ID2, ID3 } );
             }
-            return (ID1, ID2, ID3, ID4);
+            if (kps.Count == 4)
+            {
+                for (int i = 1; i <= KPs.Count; i++)
+                {
+                    if (KPs[i] == kps[0])
+                        ID1 = i;
+                    if (KPs[i] == kps[1])
+                        ID2 = i;
+                    if (KPs[i] == kps[2])
+                        ID3 = i;
+                    if (KPs[i] == kps[3])
+                        ID4 = i;
+                }
+                areaID.AddRange(new List<int>{ ID1, ID2, ID3, ID4 });
+            }
+            if (kps.Count == 5)
+            {
+                for (int i = 1; i <= KPs.Count; i++)
+                {
+                    if (KPs[i] == kps[0])
+                        ID1 = i;
+                    if (KPs[i] == kps[1])
+                        ID2 = i;
+                    if (KPs[i] == kps[2])
+                        ID3 = i;
+                    if (KPs[i] == kps[3])
+                        ID4 = i;
+                    if (KPs[i] == kps[4])
+                        ID5 = i;
+                }
+                areaID.AddRange(new List<int> { ID1, ID2, ID3, ID4, ID5 });
+            }
+            return areaID;
         }
-        public static List<(int,int,int,int)> GetWallAreaID(List<(double, double, double)>kps,Dictionary<int, (double, double, double)> KPs,double height)
+
+
+        public static List<List<int>> GetWallAreaID(List<(double, double, double)>kps,Dictionary<int, (double, double, double)> KPs)
         {
-            var ids = new List<(int, int, int, int)>();
-            var node0 = (kps[0].Item1,kps[0].Item2, kps[0].Item3+ height);
-            var node1= (kps[1].Item1, kps[1].Item2, kps[1].Item3 + height);
-            var node2 = (kps[2].Item1, kps[2].Item2, kps[2].Item3 + height);
-            int ID1 = 0, ID2 = 0, ID3 = 0, ID4 = 0, ID5 = 0, ID6 = 0;
-            for (int i=1;i<=KPs.Count;i++)
+            var ids = new List<List<int>>();
+            int ID1 = 0, ID2 = 0, ID3 = 0, ID4 = 0, ID5 = 0, ID6 = 0, ID7 = 0, ID8 = 0;
+            if (kps.Count == 6)
             {
-                if (KPs[i] == kps[0])
-                    ID1 = i;
-                if (KPs[i] == kps[2])
-                    ID2 = i;
-                if (KPs[i] == node2)
-                    ID3 = i;
-                if (KPs[i] == node0)
-                    ID4 = i;
-                if (KPs[i] == kps[1])
-                    ID5 = i;
-                if (KPs[i] == node1)
-                    ID6 = i;
-                    
+                for (int i = 1; i <= KPs.Count; i++)
+                {
+                    if (KPs[i] == kps[0]) ID1 = i;
+                    if (KPs[i] == kps[1]) ID2 = i;
+                    if (KPs[i] == kps[2]) ID3 = i;
+                    if (KPs[i] == kps[3]) ID4 = i;
+                    if (KPs[i] == kps[4]) ID5 = i;
+                    if (KPs[i] == kps[5]) ID6 = i;
+                }
+                ids.Add(new List<int> { ID1, ID2, ID5, ID4 });
+                ids.Add(new List<int> { ID2, ID3, ID6, ID5 });
             }
-            ids.Add((ID1, ID2, ID3, ID4));
-            ids.Add((ID2, ID3, ID6, ID5));
+            else
+            {
+                for (int i = 1; i <= KPs.Count; i++)
+                {
+                    if (KPs[i] == kps[0]) ID1 = i;
+                    if (KPs[i] == kps[1]) ID2 = i;
+                    if (KPs[i] == kps[2]) ID3 = i;
+                    if (KPs[i] == kps[3]) ID4 = i;
+                    if (KPs[i] == kps[4]) ID5 = i;
+                    if (KPs[i] == kps[5]) ID6 = i;
+                    if (KPs[i] == kps[6]) ID7 = i;
+                    if (KPs[i] == kps[7]) ID8 = i;
+                }
+                ids.Add(new List<int> { ID1, ID2, ID6, ID5 });
+                ids.Add(new List<int> { ID3, ID4, ID8, ID7 });
+            }
             return ids;
         }
 

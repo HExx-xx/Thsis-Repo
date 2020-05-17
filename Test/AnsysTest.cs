@@ -77,21 +77,22 @@ namespace Test
             //Add Line
             var lin = new List<AnsysLine>
             {
-                new AnsysLine(ans.IntToAnsyskeypoint(1),ans.IntToAnsyskeypoint(2)),
-                new AnsysLine(ans.IntToAnsyskeypoint(3),ans.IntToAnsyskeypoint(4)),
-                new AnsysLine(ans.IntToAnsyskeypoint(1),ans.IntToAnsyskeypoint(5))
+                new AnsysLine(ans.LongToAnsyskeypoint(1),ans.LongToAnsyskeypoint(2)),
+                new AnsysLine(ans.LongToAnsyskeypoint(3),ans.LongToAnsyskeypoint(4)),
+                new AnsysLine(ans.LongToAnsyskeypoint(1),ans.LongToAnsyskeypoint(5))
             };
             ans.AddLine(lin);
             //Add Area
+            int area_index = 1;
             var are = new List<AnsysArea>
             {
-                new AnsysArea(ans.IntToAnsyskeypoint(1),ans.IntToAnsyskeypoint(2),ans.IntToAnsyskeypoint(3)),
-                new AnsysArea(ans.IntToAnsyskeypoint(1),ans.IntToAnsyskeypoint(2),ans.IntToAnsyskeypoint(3),ans.IntToAnsyskeypoint(4))
+                new AnsysArea(area_index++,ans.LongToAnsyskeypoint(1),ans.LongToAnsyskeypoint(2),ans.LongToAnsyskeypoint(3)),
+                new AnsysArea(area_index++,ans.LongToAnsyskeypoint(1),ans.LongToAnsyskeypoint(2),ans.LongToAnsyskeypoint(3),ans.LongToAnsyskeypoint(4))
             };
             ans.AddArea(are);
             //Add Aglue
-            var aglue = new AnsysAglue(ans.IntToAnsysarea(1), ans.IntToAnsysarea(2));
-            ans.AddAglue(aglue);
+            //var aglue = new AnsysAglue(ans.IntToAnsysarea(1), ans.IntToAnsysarea(2));
+            //ans.AddAglue(aglue);
 
             ans.WriteAPDLFile(PATH);
             Assert.IsTrue(File.Exists(PATH));

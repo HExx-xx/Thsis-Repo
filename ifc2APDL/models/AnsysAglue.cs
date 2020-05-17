@@ -12,8 +12,7 @@ namespace ifc2APDL.AnsysFactory.models
         {
             area1 = a1;
             area2 = a2;
-        }
-             
+        } 
         public override string ToString()
         {
             return string.Format($"AGLUE,{area1.ID},{area2.ID}");

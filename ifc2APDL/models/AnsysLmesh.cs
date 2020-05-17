@@ -13,6 +13,10 @@ namespace ifc2APDL.AnsysFactory.models
         {
             ninc = 1;
         }
+        public AnsysLmesh(string s)
+        {
+            NL1 = s;
+        }
         public override string ToString()
         {
             if (NL1 == "ALL")
@@ -20,6 +24,5 @@ namespace ifc2APDL.AnsysFactory.models
             else
                 return string.Format($"LMESH,NL1,{NL2},{ninc}");
         }
-
     }
 }

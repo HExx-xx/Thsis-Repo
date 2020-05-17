@@ -13,10 +13,12 @@ namespace Test
     public class TranslateTest
     {
         [TestMethod]
-        public void TranslateColumnTest()
+        public void TranslateShearWallTest()
         {
-            const string PATH = "../../TestFiles/building.ifc";
-            const string OUTPUT = "../../TestFiles/column-test.txt";
+            const string PATH = "../../TestFiles/shearwall.ifc";
+            const string OUTPUT = "../../TestFiles/shearwall-trans.txt";
+            //const string PATH = "../../TestFiles/building.ifc";
+            //const string OUTPUT = "../../TestFiles/trans.txt";
 
             using (var model = IfcStore.Open(PATH))
             {

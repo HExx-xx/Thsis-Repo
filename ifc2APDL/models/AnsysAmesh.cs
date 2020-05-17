@@ -12,14 +12,17 @@ namespace ifc2APDL.AnsysFactory.models
         public AnsysAmesh()
         {
             ninc = 1;
-
+        }
+        public AnsysAmesh(string s)
+        {
+            AL1 = s;
         }
         public override string ToString()
         {
             if (AL1 == "ALL")
-                return string.Format($"LMESH,ALL");
+                return string.Format($"AMESH,ALL");
             else
-                return string.Format($"LMESH,AL1,{AL2},{ninc}");
+                return string.Format($"AMESH,AL1,{AL2},{ninc}");
         }
     }
 }

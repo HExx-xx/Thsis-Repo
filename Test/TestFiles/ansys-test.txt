@@ -1,22 +1,22 @@
 !--------------------------------------
 	!Ansys Test File
-	!Data/Time:2020/2/10 1:20:28
+	!Data/Time:2020/4/17 15:32:52
 	!Produced by :ifc2APDL.AnsysFactory
 	!Author:HSX
 !--------------------------------------
 /PREP7
 
 !Elements
-ET,1,BEAM188
-ET,2,SHELL63
+ET,1,BEAM188,0, 0 , 0, 0, 0, 0, 0
+ET,2,SHELL63,0, 0 , 0, 0, 0, 0, 0
 
 !Materials
-MP,EX,1,33000000000
-MP,PRXY,1,0.2
-MP,DENS,1,2500
-MP,EX,2,200000000000
-MP,PRXY,2,0.3
-MP,DENS,2,7850
+MP,EX,1,33000000000,0,0,0,0
+MP,PRXY,1,0.2,0,0,0,0
+MP,DENS,1,2500,0,0,0,0
+MP,EX,2,200000000000,0,0,0,0
+MP,PRXY,2,0.3,0,0,0,0
+MP,DENS,2,7850,0,0,0,0
 
 !Sections
 SECTYPE,1,BEAM,RECT
@@ -51,4 +51,4 @@ A,1,2,3
 A,1,2,3,4
 
 !Build Aglues
-AGLUE,0,0
+AGLUE,1,2

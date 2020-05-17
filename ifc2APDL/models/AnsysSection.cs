@@ -11,8 +11,7 @@ namespace ifc2APDL.AnsysFactory.models
         public AnsysSecData data { get; set; }
         public override string ToString()
         {
-            return string.Format($"{ type.ToString()}\n"+
-                $"{data.ToString()}");
+            return string.Format($"{ type.ToString()}\n"+$"{data.ToString()}");
         }
     }
 }
